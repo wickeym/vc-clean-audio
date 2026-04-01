@@ -1,0 +1,19 @@
+{
+  "rules": [
+    {
+      "name": "collapse_whitespace",
+      "type": "normalize_whitespace",
+      "enabled": true,
+      "notes": "Useful after transcript cleanup."
+    },
+    {
+      "name": "preserve_named_entities",
+      "type": "protected_terms",
+      "enabled": true,
+      "terms": [
+        "Tommy Vercetti",
+        "Vice City"
+      ]
+    }
+  ]
+}

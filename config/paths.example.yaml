@@ -1,0 +1,5 @@
+gta_vc_root: C:/Games/GTA_VC
+input_audio_dir: C:/Games/GTA_VC/audio
+work_dir: ./work
+output_dir: ./output
+tools_dir: ./tools

@@ -1,0 +1,55 @@
+catalog:
+  recursive: true
+  include_extensions:
+    - .adf
+    - .wav
+    - .mp3
+    - .ogg
+    - .raw
+  output_csv: metadata/catalog.csv
+
+decode:
+  enabled: true
+  output_subdir: decoded
+  overwrite: false
+  decoder_tool: ""
+
+classify:
+  enabled: true
+  strategy: extension_then_manual_review
+  review_manifest: metadata/classification_review.csv
+
+transcribe:
+  enabled: true
+  engine: ""
+  language: en
+  model: ""
+  batch_size: 4
+
+clean_text:
+  enabled: true
+  profanity_map_path: config/profanity_map.json
+  rewrite_rules_path: config/rewrite_rules.json
+  preserve_original_transcript: true
+
+separate:
+  enabled: true
+  engine: ""
+  vocals_subdir: separated/vocals
+  backing_subdir: separated/backing
+
+tts:
+  enabled: true
+  engine: ""
+  voice: ""
+  sample_rate_hz: 22050
+
+align_mix:
+  enabled: true
+  target_loudness_lufs: -16
+  crossfade_ms: 20
+
+package:
+  enabled: true
+  package_subdir: packages
+  manifest_path: metadata/package_manifest.csv

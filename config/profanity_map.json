@@ -1,0 +1,14 @@
+{
+  "replacements": [
+    {
+      "pattern": "damn",
+      "replacement": "darn",
+      "notes": "Starter example replacement."
+    },
+    {
+      "pattern": "hell",
+      "replacement": "heck",
+      "notes": "Starter example replacement."
+    }
+  ]
+}

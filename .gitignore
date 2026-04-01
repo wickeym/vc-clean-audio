@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local editor and OS files
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+
+# Local runtime configuration
+config/paths.yaml
+config/pipeline.yaml
+.env
+
+# Generated metadata and logs
+metadata/*.csv
+metadata/*.json
+metadata/*.jsonl
+logs/
+
+# Project runtime directories
+input/
+work/
+output/
+tools/
+
+# Audio and media artifacts
+*.wav
+*.mp3
+*.ogg
+*.flac
+*.aac
+*.m4a
+*.stem.wav
+*.srt
+*.vtt
