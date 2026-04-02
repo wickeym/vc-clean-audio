@@ -13,9 +13,9 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from vc_clean_audio.bootstrap import add_common_arguments, build_config_from_args
+from vc_clean_audio.bootstrap import add_common_arguments, load_config_with_logging
 from vc_clean_audio.config import AppConfig
-from vc_clean_audio.logging_utils import configure_logging
+from vc_clean_audio.logging_utils import configure_logging, log_config_summary, log_todos
 
 LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +41,17 @@ def run_step(config: AppConfig, args: argparse.Namespace) -> int:
     LOGGER.info("Prepared vocals output directory at %s", vocals_dir)
     LOGGER.info("Prepared backing output directory at %s", backing_dir)
     LOGGER.info("Configured separation engine: %s", engine)
-    LOGGER.info(
-        "TODO: integrate a source-separation backend after decode and classification are reliable."
+    LOGGER.warning(
+        "Source separation is not implemented yet. This step only prepares output directories."
+    )
+    log_todos(
+        LOGGER,
+        "Separate stage next steps:",
+        [
+            "Test whether dialogue assets actually need speech/music separation before adding a heavy tool.",
+            "Keep separated vocals and backing linked to the decoded source asset and model version used.",
+            "Measure whether separation improves downstream TTS replacement and mixing enough to justify it.",
+        ],
     )
     return 0
 
@@ -55,7 +64,8 @@ def main() -> int:
     args = parser.parse_args()
 
     configure_logging(verbose=args.verbose)
-    config = build_config_from_args(args, repo_root=REPO_ROOT)
+    config = load_config_with_logging(args, repo_root=REPO_ROOT, logger=LOGGER)
+    log_config_summary(LOGGER, config)
     return run_step(config, args)
 
 

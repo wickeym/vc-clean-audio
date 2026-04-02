@@ -1,116 +1,199 @@
 # vc-clean-audio
 
-`vc-clean-audio` is a Windows-first, script-driven starter project for building a GTA Vice City dialogue cleanup pipeline. The goal is to make it practical to catalog game audio, prepare it for transcription, rewrite or sanitize spoken lines, regenerate cleaned dialogue, and package outputs with as little manual work as possible.
+`vc-clean-audio` is a Windows-first starter repo for building a batch audio modding pipeline for **GTA Vice City**. The immediate goal is to inventory Vice City audio cleanly and build the project structure needed for later stages like transcription, profanity cleanup, dialogue regeneration, alignment, and packaging.
 
-This repo is intentionally focused on **GTA Vice City**, not San Andreas. It is also intentionally conservative at this stage: the foundation is here, but decoding, transcription, separation, TTS, alignment, and packaging are still starter implementations with clear TODOs rather than fake end-to-end claims.
+This repo is intentionally honest about its current state:
 
-## Project goals
+- `catalog` is usable now.
+- The later stages are starter scaffolds with logging and TODOs.
+- The repo does **not** claim decoding, transcription, TTS, alignment, or reinsertion already work.
 
-- Keep the workflow batch-oriented and script-first.
-- Separate repo code from the live game install.
-- Use config-driven paths so the same pipeline can be moved or adapted later.
-- Prefer free tools where practical.
-- Avoid committing game assets, decoded audio, intermediate stems, or final outputs.
-- Leave clean extension points for future transcription, profanity replacement, source separation, TTS, alignment, and mod packaging.
+## What works right now
 
-## Planned pipeline
+Right now, the useful end-to-end step is:
 
-The intended long-term flow is:
+- `catalog`: recursively scan an audio directory, collect file metadata, and write `metadata/catalog.csv`
 
-1. `catalog`: scan source audio and build a machine-readable inventory.
-2. `decode`: convert game audio into a workable intermediate format when tooling is ready.
-3. `classify`: separate speech-heavy assets from music, SFX, or unsupported files.
-4. `transcribe`: generate transcripts for candidate dialogue assets.
-5. `clean_text`: apply profanity replacement and rewrite rules.
-6. `separate`: split speech from backing audio where needed.
-7. `tts`: regenerate cleaned lines with the selected voice workflow.
-8. `align_mix`: line up regenerated speech and prepare replacement mixes.
-9. `package`: assemble outputs for reinsertion into the Vice City modding workflow.
+The catalog does **not** decode game audio. It only inventories files so we can make informed decisions about decoding and later automation.
 
-At the moment, `catalog` is the most complete step. The rest are real starter scripts with logging, config loading, and output directory setup so we can expand them incrementally.
+## Exact first run: catalog
+
+From `C:\dev\vc-clean-audio`, run these commands in PowerShell:
+
+```powershell
+python -m pip install -r requirements.txt
+Copy-Item config\paths.example.yaml config\paths.yaml
+Copy-Item config\pipeline.example.yaml config\pipeline.yaml
+python run_pipeline.py --step catalog --verbose
+```
+
+If you only want a quick smoke test first:
+
+```powershell
+python run_pipeline.py --step catalog --limit 25 --verbose
+```
+
+Expected result:
+
+- The script scans `input_audio_dir`
+- It writes `metadata/catalog.csv`
+- The log tells you which config files were used
+- The log prints a small extension summary
+
+## Default config behavior
+
+The example paths are already pointed at your current Vice City install:
+
+- `gta_vc_root: C:/Games/GTA_VC`
+- `input_audio_dir: C:/Games/GTA_VC/audio`
+
+The runner will fall back to the example YAML files if `config/paths.yaml` or `config/pipeline.yaml` do not exist yet. That makes first-run setup easier, but copying the example files is still recommended so your local paths stay explicit.
 
 ## Repo layout
 
 ```text
 vc-clean-audio/
-├── config/
-│   ├── paths.example.yaml
-│   ├── pipeline.example.yaml
-│   ├── profanity_map.json
-│   └── rewrite_rules.json
-├── metadata/
-│   └── .gitkeep
-├── scripts/
-│   ├── catalog.py
-│   ├── decode.py
-│   ├── classify.py
-│   ├── transcribe.py
-│   ├── clean_text.py
-│   ├── separate.py
-│   ├── tts.py
-│   ├── align_mix.py
-│   └── package.py
-├── src/
-│   └── vc_clean_audio/
-│       ├── config.py
-│       ├── bootstrap.py
-│       ├── logging_utils.py
-│       └── pipeline.py
-├── .gitignore
-├── README.md
-├── requirements.txt
-└── run_pipeline.py
+|-- config/
+|   |-- paths.example.yaml
+|   |-- pipeline.example.yaml
+|   |-- profanity_map.json
+|   `-- rewrite_rules.json
+|-- metadata/
+|   `-- .gitkeep
+|-- scripts/
+|   |-- catalog.py
+|   |-- decode.py
+|   |-- classify.py
+|   |-- transcribe.py
+|   |-- clean_text.py
+|   |-- separate.py
+|   |-- tts.py
+|   |-- align_mix.py
+|   `-- package.py
+|-- src/
+|   `-- vc_clean_audio/
+|       |-- bootstrap.py
+|       |-- config.py
+|       |-- logging_utils.py
+|       `-- pipeline.py
+|-- .gitignore
+|-- requirements.txt
+`-- run_pipeline.py
 ```
 
-## Getting started
+## Practical workflow
 
-### 1. Create a virtual environment
+1. Start with `catalog` to learn what is actually in `C:\Games\GTA_VC\audio`.
+2. Use that catalog to decide which file groups need custom Vice City decoding support.
+3. Add decoding only after the source formats and toolchain are clear.
+4. Add classification and transcription only after decoded dialogue candidates exist.
+5. Add cleanup, TTS, alignment, and packaging only after there is a trustworthy manifest chain between stages.
 
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
+## Current pipeline stages
 
-### 2. Create local config files
+### `catalog`
 
-Copy the example configs so you can keep machine-specific paths out of git:
+Implemented now.
 
-```powershell
-Copy-Item config\paths.example.yaml config\paths.yaml
-Copy-Item config\pipeline.example.yaml config\pipeline.yaml
-```
+- Loads config from YAML
+- Scans `input_audio_dir` recursively
+- Filters by configured file extensions
+- Writes `metadata/catalog.csv`
+- Records `source_path`, `relative_path`, `filename`, `extension`, `size_bytes`, and `discovered_at`
 
-The default example already points `gta_vc_root` at `C:\Games\GTA_VC`, but you should still review and adjust paths for your setup.
+### `decode`
 
-### 3. Run the catalog step
+Not implemented yet.
 
-```powershell
-python run_pipeline.py --step catalog
-```
+- Intended to wrap Vice City-compatible decode tooling
+- Should produce an intermediate working format without touching originals
 
-If your live config files do not exist yet, the runner will fall back to the example YAML files.
+### `classify`
 
-The catalog step scans `input_audio_dir` recursively and writes a CSV to `metadata/catalog.csv`.
+Not implemented yet.
 
-## Configuration notes
+- Intended to separate likely dialogue assets from music, ambience, and unknown assets
 
-- `config/paths*.yaml` controls physical locations such as the Vice City install, working directories, and tool directories.
-- `config/pipeline*.yaml` is for per-step settings such as catalog filters, transcription defaults, separation thresholds, and packaging behavior.
-- `config/profanity_map.json` is the starter replacement dictionary for profanity cleanup.
-- `config/rewrite_rules.json` is the starter rewrite rules file for more contextual text changes later.
+### `transcribe`
+
+Not implemented yet.
+
+- Intended to convert candidate dialogue clips into transcript records
+
+### `clean_text`
+
+Not implemented yet.
+
+- Intended to apply profanity replacements and rewrite rules to transcripts
+
+### `separate`
+
+Not implemented yet.
+
+- Intended for optional speech/music separation if the chosen workflow actually benefits from it
+
+### `tts`
+
+Not implemented yet.
+
+- Intended to generate replacement dialogue audio from cleaned text
+
+### `align_mix`
+
+Not implemented yet.
+
+- Intended to align regenerated speech against source timing and prepare usable mixes
+
+### `package`
+
+Not implemented yet.
+
+- Intended to assemble final outputs for the Vice City modding workflow
+
+## Configuration files
+
+### `config/paths.example.yaml`
+
+Controls machine-specific paths:
+
+- `gta_vc_root`
+- `input_audio_dir`
+- `work_dir`
+- `output_dir`
+- `tools_dir`
+
+Relative paths are resolved from the repo root, not from the `config` directory.
+
+### `config/pipeline.example.yaml`
+
+Controls per-step behavior such as:
+
+- which extensions `catalog` includes
+- where `catalog` writes its CSV
+- placeholder settings for later stages
+
+### `config/profanity_map.json`
+
+Starter profanity replacement map for future transcript cleanup.
+
+### `config/rewrite_rules.json`
+
+Starter rewrite rule file for future text normalization and protected terms.
+
+## Windows notes
+
+- Use `python -m pip install -r requirements.txt` instead of relying on the `py` launcher.
+- Keep the repo separate from `C:\Games\GTA_VC`.
+- Do not commit decoded audio, generated stems, transcripts, or packaged outputs.
+- The starter config uses forward slashes in YAML because they are reliable on Windows and still resolve correctly with `pathlib`.
 
 ## Design choices
 
-- `pathlib` is used throughout to keep Windows path handling readable and safe.
-- Relative paths in config are resolved from the repo root, not from the `config/` folder.
-- The shared code in `src/vc_clean_audio/` keeps step scripts small and easy to extend.
-- The starter scripts do not assume GTA Vice City audio can already be decoded directly by Python. That work is intentionally left for a later tool integration step.
+- `pathlib` is used throughout for path handling.
+- The runner logs which config files were selected, including example-file fallback.
+- The unfinished stages are explicit scaffolds with TODOs rather than fake functionality.
+- The repo keeps code, config, metadata, and future outputs clearly separated.
 
-## Next sensible additions
+## Suggested next step after catalog
 
-- Add a real decoder wrapper around the chosen Vice City audio tooling.
-- Add speech-file heuristics in `classify`.
-- Add Whisper-based transcription as an optional module.
-- Add profanity replacement and rewrite tracking with before/after audit data.
-- Add packaging rules once the target reinsertion format is locked down.
+Once `metadata/catalog.csv` exists, the next practical move is to inspect which Vice City audio file types and folder patterns appear most often. That should drive the real decoder integration instead of guessing up front.

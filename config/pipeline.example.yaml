@@ -1,3 +1,7 @@
+# Copy this file to config/pipeline.yaml for local changes.
+# Only the catalog step is implemented today. The other sections are
+# placeholders so future pipeline work has a stable config shape.
+
 catalog:
   recursive: true
   include_extensions:

@@ -13,9 +13,9 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from vc_clean_audio.bootstrap import add_common_arguments, build_config_from_args
+from vc_clean_audio.bootstrap import add_common_arguments, load_config_with_logging
 from vc_clean_audio.config import AppConfig
-from vc_clean_audio.logging_utils import configure_logging
+from vc_clean_audio.logging_utils import configure_logging, log_config_summary, log_todos
 
 LOGGER = logging.getLogger(__name__)
 
@@ -37,8 +37,17 @@ def run_step(config: AppConfig, args: argparse.Namespace) -> int:
     LOGGER.info("Prepared alignment workspace at %s", mixes_dir)
     if args.dry_run:
         LOGGER.info("Dry-run mode enabled for future alignment validation.")
-    LOGGER.info(
-        "TODO: add timing alignment, loudness matching, and final mix assembly once source assets exist."
+    LOGGER.warning(
+        "Alignment and mix assembly are not implemented yet. This step currently prepares the workspace only."
+    )
+    log_todos(
+        LOGGER,
+        "Align/mix stage next steps:",
+        [
+            "Match regenerated speech timing to the source clip or transcript timing markers.",
+            "Apply consistent loudness and trim handling so replacements do not stand out in-game.",
+            "Keep mix decisions reversible by writing manifests instead of mutating assets in place.",
+        ],
     )
     return 0
 
@@ -51,7 +60,8 @@ def main() -> int:
     args = parser.parse_args()
 
     configure_logging(verbose=args.verbose)
-    config = build_config_from_args(args, repo_root=REPO_ROOT)
+    config = load_config_with_logging(args, repo_root=REPO_ROOT, logger=LOGGER)
+    log_config_summary(LOGGER, config)
     return run_step(config, args)
 
 

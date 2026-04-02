@@ -7,6 +7,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+
+@dataclass(slots=True)
+class ConfigSources:
+    """Locations of the config files used for a pipeline run."""
+
+    paths_config_path: Path
+    pipeline_config_path: Path
+    paths_from_example: bool
+    pipeline_from_example: bool
+
+
 @dataclass(slots=True)
 class PathsConfig:
     """Resolved filesystem paths used by the pipeline."""
@@ -25,6 +36,7 @@ class AppConfig:
     repo_root: Path
     paths: PathsConfig
     pipeline: dict[str, Any]
+    sources: ConfigSources
 
     def resolve_repo_path(self, value: str | Path) -> Path:
         """Resolve a possibly relative path against the repository root."""
@@ -70,6 +82,9 @@ def load_app_config(
     repo_root: Path,
     paths_config_path: Path,
     pipeline_config_path: Path,
+    *,
+    paths_from_example: bool = False,
+    pipeline_from_example: bool = False,
 ) -> AppConfig:
     """Load and resolve the full application configuration."""
     paths_payload = _load_yaml(paths_config_path)
@@ -98,4 +113,10 @@ def load_app_config(
         repo_root=repo_root.resolve(),
         paths=paths,
         pipeline=pipeline_payload,
+        sources=ConfigSources(
+            paths_config_path=paths_config_path.resolve(),
+            pipeline_config_path=pipeline_config_path.resolve(),
+            paths_from_example=paths_from_example,
+            pipeline_from_example=pipeline_from_example,
+        ),
     )

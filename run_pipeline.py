@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 from pathlib import Path
 
@@ -12,9 +13,11 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from vc_clean_audio.bootstrap import add_common_arguments, build_config_from_args
-from vc_clean_audio.logging_utils import configure_logging
+from vc_clean_audio.bootstrap import add_common_arguments, load_config_with_logging
+from vc_clean_audio.logging_utils import configure_logging, log_config_summary
 from vc_clean_audio.pipeline import STEP_MODULES, get_step_module
+
+LOGGER = logging.getLogger("vc_clean_audio")
 
 
 def build_parser(
@@ -71,7 +74,8 @@ def main() -> int:
     args = parser.parse_args()
     configure_logging(verbose=args.verbose)
 
-    config = build_config_from_args(args, repo_root=REPO_ROOT)
+    config = load_config_with_logging(args, repo_root=REPO_ROOT, logger=LOGGER)
+    log_config_summary(LOGGER, config)
     module = get_step_module(args.step)
     return module.run_step(config, args)
 

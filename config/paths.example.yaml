@@ -1,3 +1,6 @@
+# Copy this file to config/paths.yaml for your local machine.
+# Relative paths are resolved from the repository root.
+
 gta_vc_root: C:/Games/GTA_VC
 input_audio_dir: C:/Games/GTA_VC/audio
 work_dir: ./work

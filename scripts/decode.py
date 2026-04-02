@@ -13,9 +13,9 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from vc_clean_audio.bootstrap import add_common_arguments, build_config_from_args
+from vc_clean_audio.bootstrap import add_common_arguments, load_config_with_logging
 from vc_clean_audio.config import AppConfig
-from vc_clean_audio.logging_utils import configure_logging
+from vc_clean_audio.logging_utils import configure_logging, log_config_summary, log_todos
 
 LOGGER = logging.getLogger(__name__)
 
@@ -36,11 +36,20 @@ def run_step(config: AppConfig, args: argparse.Namespace) -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     LOGGER.info("Prepared decode output directory at %s", output_dir)
-    LOGGER.info(
-        "TODO: integrate a Vice City-compatible decoder tool. Current script is a starter scaffold only."
+    LOGGER.warning(
+        "Decoding is not implemented yet. This step only prepares the workspace and documents next work."
     )
     if args.overwrite or decode_settings.get("overwrite", False):
         LOGGER.info("Overwrite mode is enabled for future decoder integration.")
+    log_todos(
+        LOGGER,
+        "Decode stage next steps:",
+        [
+            "Pick a Vice City-compatible decoder and document how it is installed in tools_dir.",
+            "Map game-native source formats to an intermediate WAV workflow without overwriting originals.",
+            "Write a decode manifest so later steps know which source file produced which decoded asset.",
+        ],
+    )
     return 0
 
 
@@ -52,7 +61,8 @@ def main() -> int:
     args = parser.parse_args()
 
     configure_logging(verbose=args.verbose)
-    config = build_config_from_args(args, repo_root=REPO_ROOT)
+    config = load_config_with_logging(args, repo_root=REPO_ROOT, logger=LOGGER)
+    log_config_summary(LOGGER, config)
     return run_step(config, args)
 
 

@@ -13,9 +13,9 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from vc_clean_audio.bootstrap import add_common_arguments, build_config_from_args
+from vc_clean_audio.bootstrap import add_common_arguments, load_config_with_logging
 from vc_clean_audio.config import AppConfig
-from vc_clean_audio.logging_utils import configure_logging
+from vc_clean_audio.logging_utils import configure_logging, log_config_summary, log_todos
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,8 +45,17 @@ def run_step(config: AppConfig, args: argparse.Namespace) -> int:
 
     LOGGER.info("Classification strategy: %s", strategy)
     LOGGER.info("Review manifest path reserved at %s", review_manifest)
-    LOGGER.info(
-        "TODO: implement heuristics for Vice City dialogue detection and manual review queue generation."
+    LOGGER.warning(
+        "Classification is not implemented yet. This step only records how the workflow should evolve."
+    )
+    log_todos(
+        LOGGER,
+        "Classify stage next steps:",
+        [
+            "Use catalog output to group assets by extension, naming patterns, and source folder.",
+            "Mark likely speech candidates separately from music, ambience, and unknown content.",
+            "Export a review queue so uncertain files can be checked manually before transcription.",
+        ],
     )
     return 0
 
@@ -59,7 +68,8 @@ def main() -> int:
     args = parser.parse_args()
 
     configure_logging(verbose=args.verbose)
-    config = build_config_from_args(args, repo_root=REPO_ROOT)
+    config = load_config_with_logging(args, repo_root=REPO_ROOT, logger=LOGGER)
+    log_config_summary(LOGGER, config)
     return run_step(config, args)
 
 
