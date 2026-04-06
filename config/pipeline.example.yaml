@@ -1,5 +1,5 @@
 # Copy this file to config/pipeline.yaml for local changes.
-# Only the catalog step is implemented today. The other sections are
+# Catalog and decode are implemented today. The other sections are
 # placeholders so future pipeline work has a stable config shape.
 
 catalog:
@@ -14,9 +14,15 @@ catalog:
 
 decode:
   enabled: true
-  output_subdir: decoded
+  catalog_csv: metadata/catalog.csv
+  output_subdir: decoded_wav
   overwrite: false
   decoder_tool: ""
+  ffmpeg_path: ""
+  ffprobe_path: ""
+  target_sample_rate_hz: ""
+  target_channels: ""
+  timeout_seconds: 120
 
 classify:
   enabled: true

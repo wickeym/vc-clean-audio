@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import logging
 import sys
 from collections import Counter
-from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -18,22 +16,11 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from vc_clean_audio.bootstrap import add_common_arguments, load_config_with_logging
+from vc_clean_audio.catalog_data import normalize_catalog_row, write_catalog_rows
 from vc_clean_audio.config import AppConfig
 from vc_clean_audio.logging_utils import configure_logging, log_config_summary
 
 LOGGER = logging.getLogger(__name__)
-
-
-@dataclass(slots=True)
-class CatalogRow:
-    """Serializable metadata for a discovered source file."""
-
-    source_path: str
-    relative_path: str
-    filename: str
-    extension: str
-    size_bytes: int
-    discovered_at: str
 
 
 def add_arguments(parser: argparse.ArgumentParser) -> None:
@@ -51,7 +38,7 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     )
 
 
-def scan_audio_files(config: AppConfig, limit: int | None = None) -> list[CatalogRow]:
+def scan_audio_files(config: AppConfig, limit: int | None = None) -> list[dict[str, object]]:
     """Scan the configured audio directory and build catalog rows."""
     input_dir = config.paths.input_audio_dir
     if not input_dir.exists():
@@ -70,7 +57,7 @@ def scan_audio_files(config: AppConfig, limit: int | None = None) -> list[Catalo
     iterator = sorted(input_dir.rglob("*") if recursive else input_dir.glob("*"))
     discovered_at = datetime.now(timezone.utc).isoformat()
 
-    rows: list[CatalogRow] = []
+    rows: list[dict[str, object]] = []
     for path in iterator:
         if not path.is_file():
             continue
@@ -85,13 +72,15 @@ def scan_audio_files(config: AppConfig, limit: int | None = None) -> list[Catalo
             continue
 
         rows.append(
-            CatalogRow(
-                source_path=str(path),
-                relative_path=str(path.relative_to(input_dir)),
-                filename=path.name,
-                extension=path.suffix.lower(),
-                size_bytes=stat.st_size,
-                discovered_at=discovered_at,
+            normalize_catalog_row(
+                {
+                    "source_path": str(path),
+                    "relative_path": str(path.relative_to(input_dir)),
+                    "filename": path.name,
+                    "extension": path.suffix.lower(),
+                    "size_bytes": stat.st_size,
+                    "discovered_at": discovered_at,
+                }
             )
         )
 
@@ -101,21 +90,14 @@ def scan_audio_files(config: AppConfig, limit: int | None = None) -> list[Catalo
     return rows
 
 
-def write_catalog(rows: list[CatalogRow], output_path: Path) -> None:
+def write_catalog(rows: list[dict[str, object]], output_path: Path) -> None:
     """Write the catalog rows to CSV."""
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = list(asdict(rows[0]).keys()) if rows else list(CatalogRow.__annotations__.keys())
-
-    with output_path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(asdict(row))
+    write_catalog_rows(rows, output_path)
 
 
-def log_catalog_summary(rows: list[CatalogRow], output_path: Path) -> None:
+def log_catalog_summary(rows: list[dict[str, object]], output_path: Path) -> None:
     """Log a compact summary of the generated catalog."""
-    extension_counts = Counter(row.extension or "<no_ext>" for row in rows)
+    extension_counts = Counter(str(row.get("extension") or "<no_ext>") for row in rows)
     LOGGER.info("Catalog output path: %s", output_path)
     LOGGER.info("Cataloged %s files across %s extension groups", len(rows), len(extension_counts))
 

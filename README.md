@@ -5,14 +5,16 @@
 This repo is intentionally honest about its current state:
 
 - `catalog` is usable now.
+- `decode` is implemented as a first-pass FFmpeg-driven stage.
 - The later stages are starter scaffolds with logging and TODOs.
-- The repo does **not** claim decoding, transcription, TTS, alignment, or reinsertion already work.
+- The repo does **not** claim every Vice City audio format is already supported, or that transcription, TTS, alignment, or reinsertion already work.
 
 ## What works right now
 
-Right now, the useful end-to-end step is:
+Right now, the useful implemented steps are:
 
 - `catalog`: recursively scan an audio directory, collect file metadata, and write `metadata/catalog.csv`
+- `decode`: convert supported inputs to working WAV files and update the catalog with decode results
 
 The catalog does **not** decode game audio. It only inventories files so we can make informed decisions about decoding and later automation.
 
@@ -103,10 +105,19 @@ Implemented now.
 
 ### `decode`
 
-Not implemented yet.
+Implemented as a first practical stage.
 
-- Intended to wrap Vice City-compatible decode tooling
-- Should produce an intermediate working format without touching originals
+- Reads `metadata/catalog.csv`
+- Uses FFmpeg where available
+- Writes standardized PCM WAV outputs under `work/decoded_wav`
+- Updates the catalog with `decoded_wav_path`, `duration_seconds`, `sample_rate`, and `channels`
+- Logs decode failures and continues instead of pretending unsupported formats work
+
+Run it after catalog:
+
+```powershell
+python run_pipeline.py --step decode --verbose
+```
 
 ### `classify`
 
